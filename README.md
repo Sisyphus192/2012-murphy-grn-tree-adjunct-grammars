@@ -8,55 +8,53 @@ A from-scratch reimplementation and replication study of:
 > Springer, 2012. DOI:
 > [10.1007/978-3-642-32937-1_38](https://doi.org/10.1007/978-3-642-32937-1_38)
 
-The paper evolves an **artificial Gene Regulatory Network (GRN)** whose
-"Product" protein concentrations are read out as a stream of integer codons,
-mapped through a **Tree-Adjunct Grammar (TAGE)** into an arithmetic expression,
-and used as the control law for the classic **inverted-pendulum (cart-pole)**
-task. Four grammars (Direct, Discrete, Continuous, Symbolic Regression) × two
-output methods (Concentration, Tendency) give eight configurations, scored on
-training success and on a 625-case generalisation grid (Table 2 of the paper).
+The paper evolves an artificial Gene Regulatory Network (GRN) whose "Product"
+protein concentrations are read out as a stream of integer codons, mapped through
+a Tree-Adjunct Grammar (TAGE) into an arithmetic expression, and used as the
+control law for the inverted-pendulum (cart-pole) task. Four grammars (Direct,
+Discrete, Continuous, Symbolic Regression) × two output methods (Concentration,
+Tendency) give eight configurations, scored on training success and on a 625-case
+generalisation grid (Table 2 of the paper).
 
 No public source code or independent reproduction of this paper exists (verified
 against the authors' repositories and the GE community's PonyGE2); to our
-knowledge **this is the first**.
+knowledge this is the first.
 
 ---
 
 ## TL;DR — what we found
 
 - **The pipeline reproduces faithfully.** Physics, GRN dynamics, the four
-  grammars, the four output methods, the EA, and the generalisation protocol
-  were each verified line-by-line against the paper _and_ its
-  predecessor/thesis. Every parameter in the paper's Table 1 matches.
+  grammars, the four output methods, the EA, and the generalisation protocol were
+  each verified line-by-line against the paper and against its predecessor and
+  thesis. Every parameter in the paper's Table 1 matches.
 - **Concentration configs and the shallow-grammar Tendency configs reproduce
-  well** on training success (within a few points) and on the _shape_ of the
+  well** on training success (within a few points) and on the shape of the
   generalisation results.
-- **One systematic divergence:** the **deep-grammar × Tendency** configs
-  **under-solve** the training task — **Continuous·Tendency 66%** (paper 100% /
-  thesis 94%) and **SymbolicRegression·Tendency 30%** (paper 86% / thesis 82%).
-  At the same time, **every** Tendency config **generalises ~2× _better_** than
-  the paper.
-- **This is inherent to the faithful model, not a bug — but not for the
-  reason we first proposed.** We implemented and **ruled out seven candidate
-  levers** (θ̇ range, physics timestep, control-interval sub-stepping,
-  crossover, the signed-vs-absolute sort, the concentration floor `0.0` vs the
-  thesis's `1e-10`, and the tendency tie-threshold); none closes the gap and
-  several _hurt_. The real driver is the one the thesis names: the P-protein
-  _ordering_ the deep grammars consume is very hard to evolve under the
-  2000-iteration sync, whereas concentration is anchored by its sum-to-1
+- **One systematic divergence.** The deep-grammar × Tendency configs under-solve
+  the training task: Continuous·Tendency 66% (paper 100%, thesis 94%) and
+  SymbolicRegression·Tendency 30% (paper 86%, thesis 82%). At the same time, every
+  Tendency config generalises ~2× better than the paper.
+- **Inherent to the faithful model, not a bug — but not for the reason we first
+  proposed.** We implemented and ruled out seven candidate levers (θ̇ range,
+  physics timestep, control-interval sub-stepping, crossover, the signed-vs-absolute
+  sort, the concentration floor `0.0` vs the thesis's `1e-10`, and the tendency
+  tie-threshold); none closes the gap and several hurt. The driver is the one the
+  thesis names: the P-protein ordering the deep grammars consume is hard to evolve
+  under the 2000-iteration sync, whereas concentration is anchored by its sum-to-1
   normalisation.
-- **The chatter is a symptom, not the cause.** The tendency force _does_
-  chatter (~2× concentration near balance), but _reducing_ it — forcing the
-  controller to hold — makes training **worse** (SymReg·Tend 25→8% as the
-  tie-threshold rises), so reactivity is load-bearing. Our earlier
-  "responsive-but-jumpy force cannot hold" explanation was wrong on causation.
-- **Variance explains the wobble; a systematic gap remains.** The paper (50
-  runs) and thesis (100 runs) of the _same_ work differ by up to 18 points, and
-  our seed-to-seed swings are large — so single numbers mislead. But pooling
-  110 faithful runs still gives SymReg·Tend **24.5%** vs paper 86% / thesis
-  82%: the deep-grammar × Tendency gap is real, not noise, and the residual
-  points to unspecified implementation details (GEVA's TAGE internals,
-  normalisation order, steady-state window) not recoverable from the text.
+- **The chatter is a symptom, not the cause.** The tendency force does chatter
+  (~2× concentration near balance), but reducing it — forcing the controller to
+  hold — makes training worse (SymReg·Tend 25→8% as the tie-threshold rises), so
+  reactivity is load-bearing. Our earlier "responsive-but-jumpy force cannot hold"
+  explanation was wrong on causation.
+- **Variance explains the wobble; a systematic gap remains.** The paper (50 runs)
+  and thesis (100 runs) of the same work differ by up to 18 points, and our
+  seed-to-seed swings are large, so single numbers mislead. But pooling 110
+  faithful runs still gives SymReg·Tend 24.5% vs paper 86% / thesis 82%: the
+  deep-grammar × Tendency gap is real, not noise, and the residual points to
+  unspecified implementation details (GEVA's TAGE internals, normalisation order,
+  steady-state window) not recoverable from the text.
 
 ---
 
@@ -122,19 +120,19 @@ Sort-by-Tendency, mutation-only, `physics_dt = 0.02 s`.
 
 - **Training success (Suc):** we match within tolerance on most configs
   (Direct·Conc 78/94 and Discrete·Conc 90/72 straddle the paper; Continuous·Conc
-  and SymReg·Conc land squarely on it; the shallow Tendency configs
-  Discrete·Tend 96% and Direct·Tend 78% are fine). The two deep-grammar Tendency
-  configs are the clear misses: **Continuous·Tend 66%** and **SymReg·Tend 30%**.
-- **Generalisation:** our Concentration _best_-individual scores track the paper
-  on every grammar (e.g. SymReg·Conc best 343 vs 356), but our _mean_
-  undershoots for the three deeper grammars — a distribution shift, not a
-  capability gap. Our **Tendency** generalisation runs **~2× above** the paper
-  across the board (SymReg·Tend mean 147 vs 79; Continuous·Tend 127 vs 62).
+  and SymReg·Conc land squarely on it; the shallow Tendency configs Discrete·Tend
+  96% and Direct·Tend 78% are fine). The two deep-grammar Tendency configs are the
+  clear misses: Continuous·Tend 66% and SymReg·Tend 30%.
+- **Generalisation:** our Concentration best-individual scores track the paper
+  on every grammar (e.g. SymReg·Conc best 343 vs 356), but our mean undershoots
+  for the three deeper grammars, a distribution shift rather than a capability
+  gap. Our Tendency generalisation runs ~2× above the paper across the board
+  (SymReg·Tend mean 147 vs 79; Continuous·Tend 127 vs 62).
 - **The paper's two qualitative trends:** "Tendency finds solutions faster"
-  reproduces (our Tendency solution-generations are low). "Concentration
-  generalises better than Tendency" reproduces for the **Direct** grammar but
-  **reverses** for the three Sort grammars — purely because our Tendency
-  _over_-generalises, lifting it above Concentration.
+  reproduces (our Tendency solution-generations are low). "Concentration generalises
+  better than Tendency" reproduces for the Direct grammar but reverses for the three
+  Sort grammars, purely because our Tendency over-generalises and lifts it above
+  Concentration.
 
 ---
 
@@ -142,13 +140,12 @@ Sort-by-Tendency, mutation-only, `physics_dt = 0.02 s`.
 
 The 8-page paper does not state the physics constants, the GRN scaling factors,
 the input encoding, the output-selection rule, or the random-init distribution.
-We recovered them from the paper's **direct predecessor** — Nicolau, Schoenauer
-& Banzhaf, _Evolving Genes to Balance a Pole_ (EuroGP 2010,
-[arXiv:1005.2815](https://arxiv.org/abs/1005.2815)), the _same_ GRN+cart-pole —
-and from **Murphy's PhD thesis** (UCD, _An Exploration of Tree-Adjoining
-Grammars for Grammatical Evolution_), of which this paper is Chapter 9.
-Non-obvious reconstructions, each of which materially changed results during
-development:
+We recovered them from the paper's direct predecessor — Nicolau, Schoenauer &
+Banzhaf, _Evolving Genes to Balance a Pole_ (EuroGP 2010,
+[arXiv:1005.2815](https://arxiv.org/abs/1005.2815)), the same GRN and cart-pole —
+and from Murphy's PhD thesis (UCD, _An Exploration of Tree-Adjoining Grammars for
+Grammatical Evolution_), of which this paper is Chapter 9. Non-obvious
+reconstructions, each of which changed results during development:
 
 | Detail                                  | Resolution                                                                                                                                                                                                                                    | Source                                                                     |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -165,7 +162,7 @@ development:
 
 ## Hypotheses tested and ruled out (and why)
 
-Everything below was implemented and **measured**, not argued away. Two falsified
+Everything below was implemented and measured, not argued away. Two falsified
 code levers are retained behind flags (`--crossover-rate`, `--tendency-sort`); the
 tendency chatter/collapse is probed by `investigation/probe_tendency_chatter.py`;
 the floor and tie-threshold success numbers come from paired EA runs (floor = the
@@ -182,87 +179,87 @@ the floor and tie-threshold success numbers come from paired EA runs (floor = th
 | **Concentration floor** (`0.0` vs the thesis's `1e-10`)                                          | the thesis floors concentration at `1e-10` "so a protein can re-emerge"; flooring at `0.0` lets a TF regulator that hits zero die permanently (`dc/dt = δ(e−h)c` makes `c=0` absorbing), degenerating the tendency signal over a long rollout | **rejected**                     | the one _specified_ discrepancy (the code floors at `0.0`), but paired A/B runs show no effect: floor `0.0` **6/36** vs floor `1e-10` **8/36** solved on SymReg·Tend (not significant). Re-emergence from `1e-10` is too slow, so the live TF pool collapses either way (~10→3 over a rollout)             |
 | **Sort-by-Tendency tie-threshold** (hold when the signal is weak)                                | the near-balance chatter is what breaks the 120000-step hold, so treating sub-threshold deltas as ties (a stable, held force) should raise success | **falsified — actively harmful** | raising the threshold cuts near-balance chatter ~3× yet lowers SymReg·Tend success _monotonically_ (1e-10→**25%**, 3e-3→21%, 1e-2→**8%**, n=24 each). Reactivity is load-bearing; the jumpiness is a symptom, not the cause                                                                              |
 
-What _did_ help (and is therefore in the faithful build, not "ruled out"):
+What did help (and is therefore in the faithful build, not "ruled out"):
 best-P-gene selection, the injection-time tendency baseline, the TAGE mapper,
 and the GRN sign/promoter fixes above.
 
 ---
 
-## Why the deep-grammar × Tendency gap is inherent (and what it is _not_)
+## Why the deep-grammar × Tendency gap is inherent (and what it is not)
 
-Three drivers of the hard-to-evolve tendency _ordering_, each verified against
-code, sources, and probes (`investigation/probe_tendency_chatter.py`):
+Three drivers of the hard-to-evolve tendency ordering, each verified against code,
+sources, and probes (`investigation/probe_tendency_chatter.py`):
 
-1. **No conservation anchor.** Concentrations are normalised to sum to 1 ("if
-   one decreases, another must increase"), so the _order_ of P-proteins by
-   concentration is structurally stable across states. The _tendency_ (signed
-   change) has no such constraint, so its ordering is far harder for evolution
-   to shape into a useful control law. Murphy's thesis says exactly this, and
-   adds that the **difficulty grows with the 2000-iteration sync size** (the
-   network largely re-settles between injections, shrinking the change signal).
-   Measured: near a balanced pole the tendency signal collapses **~5×** vs a
-   wandering state, so the near-balance regime you must hold is the weakest.
+1. **No conservation anchor.** Concentrations are normalised to sum to 1 ("if one
+   decreases, another must increase"), so the order of P-proteins by concentration
+   is structurally stable across states. The tendency (signed change) has no such
+   constraint, so its ordering is far harder for evolution to shape into a useful
+   control law. Murphy's thesis says exactly this, and adds that the difficulty
+   grows with the 2000-iteration sync size: the network largely re-settles between
+   injections, shrinking the change signal. Near a balanced pole the tendency signal
+   collapses ~5× versus a wandering state, so the near-balance regime you must hold
+   is the weakest.
 2. **Degeneracy at the zero fixed point.** After settling, many "passenger"
-   P-proteins barely change; their sub-threshold deltas collapse toward the tail
-   of the codon stream — exactly the deep region the recursive SymReg grammar
-   reads. (Nicolau 2010 notes the same: tendency can stall, repeating the
-   previous action.) Measured tie-fractions reach 0.6+ for high-P-gene genomes
-   (`investigation/probe_tendency_degeneracy.py`).
-3. **Deepest grammar, most order-sensitive.** SymReg is the only
-   doubly-recursive grammar (`<expr> <expr> <op>`); it consumes the most codons
-   and is most sensitive to the leading codons (`codon[0] % |initial trees|`
-   selects the entire base expression). Stacking the most order-sensitive
-   grammar on the least-stable ordering is the worst case — which is precisely
-   where the gap is largest (SymReg·Tend < Continuous·Tend), as observed.
+   P-proteins barely change; their sub-threshold deltas collapse toward the
+   tail of the codon stream — exactly the deep region the recursive SymReg
+   grammar reads. (Nicolau 2010 notes the same: tendency can stall, repeating
+   the previous action.) Measured tie-fractions reach 0.6+ for high-P-gene
+   genomes (`investigation/probe_tendency_degeneracy.py`).
+3. **Deepest grammar, most order-sensitive.** SymReg is the only doubly-recursive
+   grammar (`<expr> <expr> <op>`); it consumes the most codons and is most sensitive
+   to the leading codons (`codon[0] % |initial trees|` selects the entire base
+   expression). Stacking the most order-sensitive grammar on the least-stable
+   ordering is the worst case, which is precisely where the gap is largest
+   (SymReg·Tend < Continuous·Tend), as observed.
 
-**What breaks — and what does _not_.** These drivers make the tendency
-_ordering_ hard to evolve into a controller that holds a near-balanced pole
-for 120 000 steps; concentration escapes it via the sum-to-1 anchor above.
-The tendency force _does_ chatter (~2× concentration near balance) and is
-more reactive, matching its _above_-paper score on the short 1000-step
-generalisation horizon. But we originally called that jumpiness the **cause**
-of the under-solve, and that is **wrong**: forcing the controller to _hold_
-instead of chatter (a larger tie-threshold) makes training success
-monotonically **worse** (SymReg·Tend 25→8%). Reactivity is load-bearing; the
-jumpiness is a _symptom_ of the unstable ordering, not the binding
-constraint — the evolvability of the ordering itself, as the thesis states.
+What breaks, and what does not: these drivers make the tendency ordering hard to
+evolve into a controller that holds a near-balanced pole for 120 000 steps, while
+concentration escapes them via the sum-to-1 anchor above. The tendency force does
+chatter (~2× concentration near balance) and is more reactive, matching its
+above-paper score on the short 1000-step generalisation horizon. We originally
+called that jumpiness the cause of the under-solve, and that was wrong: forcing
+the controller to hold instead of chatter (a larger tie-threshold) makes
+training success monotonically worse (SymReg·Tend 25→8%). Reactivity is
+load-bearing; the jumpiness is a symptom of the unstable ordering, not the
+binding constraint. What binds is the evolvability of the ordering itself, as
+the thesis states.
 
-**The residual we cannot close.** After ruling out every concrete lever (table
-above), pooling **110 faithful runs** still puts SymReg·Tend at **24.5%** vs
-paper 86% / thesis 82% — a _systematic_ gap, not sampling noise, and the one
-_specified_ discrepancy (the `0.0`-vs-`1e-10` floor) has no measurable effect.
-So the surplus over the paper's numbers is best attributed to details the
-sources never pin down — GEVA's exact TAGE mapping and codon wrapping, the
-order of the Φ normalisation vs the concentration clamp, the steady-state
-window/threshold, and P-protein tie-break order. We flag this as genuinely
-unresolved rather than claim a mechanism we cannot verify. (Corroboration for
-the _direction_: Nicolau 2010 independently reports the same
-tendency-worse-than-concentration degradation.)
+The residual we cannot close: after ruling out every concrete lever (table
+above), pooling 110 faithful runs still puts SymReg·Tend at 24.5% vs paper 86%
+/ thesis 82% — a systematic gap, not sampling noise, and the one specified
+discrepancy (the `0.0`-vs-`1e-10` floor) has no measurable effect. The surplus
+over the paper's numbers is best attributed to details the sources never pin
+down: GEVA's exact TAGE mapping and codon wrapping, the order of the Φ
+normalisation versus the concentration clamp, the steady-state window and
+threshold, and P-protein tie-break order. We flag this as unresolved rather
+than claim a mechanism we cannot verify. Nicolau 2010 independently reports the
+same tendency-worse-than-concentration degradation, which corroborates the
+direction.
 
 ---
 
-## Honest caveats & limitations
+## Caveats and limitations
 
 - **No ground-truth code exists.** Our "faithful" claim is faithfulness to the
-  _published text_ (paper + predecessor + thesis), cross-checked three ways, not
-  to the original binaries. Where the sources themselves disagree (gravity sign,
+  published text (paper, predecessor, thesis), cross-checked three ways, not to
+  the original binaries. Where the sources disagree (gravity sign,
   signed-vs-absolute sort, paper-vs-thesis success numbers) we say so and test
   empirically.
-- **The success metric is intrinsically high-variance.** One shared random
-  initial state per generation, whole population re-evaluated, run stopped at
-  the first 120 000-step solver. The paper (50 runs) and thesis (100 runs) of
-  the _same_ work differ by up to 18 points on these configs (e.g.
-  Continuous·Tend 100% vs 94%), so part of any single number is sampling noise.
-  Our results are consistent with the thesis's "more runs → lower, more honest
-  success" direction. But this variance explains only the _wobble_: pooling
-  110 faithful SymReg·Tend runs still gives 24.5%, so that config's gap is
-  systematic (see "Why … inherent"), not sampling noise.
-- **The random-initial-state _distribution_** is unspecified in the 2012
-  sources, but the predecessor (Nicolau 2010) resolves it: the start is drawn
-  over the _full_ ranges ("several combinations … result in unsolvable states"),
-  which is what we do. A narrower near-upright window would raise
-  fragile-Tendency success, but it would be _unfaithful_ — so we do not treat
-  the gap as a distribution artifact or a candidate fix.
+- **The success metric is high-variance.** One shared random initial state per
+  generation, the whole population re-evaluated, the run stopped at the first
+  120 000-step solver. The paper (50 runs) and thesis (100 runs) of the same work
+  differ by up to 18 points on these configs (e.g. Continuous·Tend 100% vs 94%),
+  so part of any single number is sampling noise. Our results follow the
+  thesis's direction of more runs giving lower, more honest success. This
+  variance explains only the wobble: pooling 110 faithful SymReg·Tend runs still
+  gives 24.5%, so that config's gap is systematic (see "Why … is inherent"), not
+  sampling noise.
+- **The random-initial-state distribution** is unspecified in the 2012 sources,
+  but the predecessor (Nicolau 2010) resolves it: the start is drawn over the
+  full ranges ("several combinations … result in unsolvable states"), which is
+  what we do. A narrower near-upright window would raise fragile-Tendency
+  success, but it would be unfaithful, so we do not treat the gap as a
+  distribution artifact or a candidate fix.
 - **Determinism:** numba kernels run with `fastmath=False`; a fixed-seed GRN
   trajectory is pinned by a golden-master test
   (`tests/test_grn/test_golden.py`).
@@ -296,7 +293,7 @@ investigation/          probe scripts behind the ruled-out-levers section
    Neurocontrol Problems._ Machine Learning 13, 1993. (the 625-case
    generalisation test)
 
-_Replication implemented in Python 3.14; the custom Eq. 4 cart-pole is
-implemented directly. Status: faithful reproduction with one well-characterised,
-source-consistent divergence on deep-grammar × Tendency. All numbers above are
-from full 50-run experiments in this repository._
+Replication implemented in Python 3.14; the custom Eq. 4 cart-pole is implemented
+directly. Status: faithful reproduction with one well-characterised,
+source-consistent divergence on deep-grammar × Tendency. All numbers above are from
+full 50-run experiments in this repository.
