@@ -1,0 +1,2 @@
+# Golden-master GRN trajectories are exact binary fixtures — never text-normalize them.
+tests/golden/** binary

@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Differential Gene Expression with Tree-Adjunct Grammars — a replication"
+abstract: >-
+  A from-scratch Python reimplementation and replication study of Murphy et al.
+  (2012, PPSN XII): an artificial gene-regulatory network (GRN) whose product-
+  protein concentrations are read out as codons, mapped through a tree-adjunct
+  grammar (TAGE) into an arithmetic expression, and used as the control law for
+  the inverted-pendulum (cart-pole) task. Reproduces the paper's results and
+  characterises one systematic, source-consistent divergence on the
+  deep-grammar x Tendency configurations.
+authors:
+  - family-names: Thomas
+    given-names: Derek
+    email: sisyphus192@gmail.com
+version: "1.0.0"
+date-released: "2026-07-02"
+license: MIT
+repository-code: "https://github.com/Sisyphus192/2012-murphy-grn-tree-adjunct-grammars"
+keywords:
+  - grammatical evolution
+  - tree-adjoining grammar
+  - gene regulatory network
+  - artificial regulatory network
+  - evolutionary computation
+  - cart-pole
+  - replication study
+  - reproducibility
+references:
+  - type: conference-paper
+    title: "Differential Gene Expression with Tree-Adjunct Grammars"
+    authors:
+      - family-names: Murphy
+        given-names: Eoin
+      - family-names: Nicolau
+        given-names: Miguel
+      - family-names: Hemberg
+        given-names: Erik
+      - family-names: O'Neill
+        given-names: Michael
+      - family-names: Brabazon
+        given-names: Anthony
+    collection-title: "Parallel Problem Solving from Nature — PPSN XII"
+    collection-type: proceedings
+    volume: 7491
+    year: 2012
+    start: 377
+    end: 386
+    publisher:
+      name: Springer
+    doi: "10.1007/978-3-642-32937-1_38"
